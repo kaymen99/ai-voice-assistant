@@ -28,6 +28,34 @@ This project is an advanced AI Voice Assistant that integrates Text-to-Speech (T
 
 - **KnowledgeBaseTool**: Access the user's personal notes and saved information from your custom knowledge base (all the documents included in the `/files` folder)
 
+## 60db Provider (alongside Deepgram)
+
+This fork adds **60db** as a peer of Deepgram across all three concerns. Each service has an independent env switch and defaults preserve the existing Deepgram + Groq setup.
+
+| Concern | File | Switch | Endpoint |
+|---|---|---|---|
+| TTS | `src/speech_processing/sixtydb_tts.py` | `TTS_PROVIDER=sixtydb` | `POST /tts-synthesize` (default), `POST /tts-stream`, or `wss://api.60db.ai/ws/tts` — pick via `SIXTYDB_TTS_TRANSPORT=sync|stream|ws` |
+| STT | `src/speech_processing/sixtydb_stt.py` | `STT_PROVIDER=sixtydb` | `wss://api.60db.ai/ws/stt` (browser mode, PCM 16k) |
+| LLM | _no new file needed_ | edit `main.py` model string + env | liteLLM routes `model="openai/60db-tiny"` with `OPENAI_API_BASE=https://api.60db.ai/v1` + `OPENAI_API_KEY=$SIXTYDB_API_KEY` to 60db's `/v1/chat/completions` |
+
+Both 60db modules expose the same interfaces as their Deepgram counterparts (`TTS().speak(text)` and `async get_transcript(callback)`), so `conversation_manager.py`'s loop body is unchanged — only the import line branches on env.
+
+### Env additions
+
+```env
+SIXTYDB_API_KEY=sk_live_...
+# Switches (defaults shown):
+TTS_PROVIDER=deepgram              # or sixtydb
+STT_PROVIDER=deepgram              # or sixtydb
+# Optional 60db tuning:
+SIXTYDB_API_BASE=https://api.60db.ai
+SIXTYDB_TTS_VOICE_ID=fbb75ed2-975a-40c7-9e06-38e30524a9a1
+SIXTYDB_TTS_TRANSPORT=sync         # sync | stream | ws
+SIXTYDB_STT_LANGUAGE=en
+```
+
+Reference: [docs.60db.ai](https://docs.60db.ai).
+
 ## How to Run
 
 ### Prerequisites

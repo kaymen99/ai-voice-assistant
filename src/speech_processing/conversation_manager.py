@@ -1,5 +1,18 @@
-from .speech_to_text import get_transcript
-from .text_to_speech import TTS
+import os
+
+# Provider switches — STT_PROVIDER + TTS_PROVIDER default to "deepgram"
+# so existing setups keep working. Set either to "sixtydb" (or "60db")
+# to route through 60db. Both peer modules expose the same interface
+# names so the loop body below is unchanged.
+if os.getenv("STT_PROVIDER", "deepgram").strip().lower() in ("sixtydb", "60db"):
+    from .sixtydb_stt import get_transcript
+else:
+    from .speech_to_text import get_transcript
+
+if os.getenv("TTS_PROVIDER", "deepgram").strip().lower() in ("sixtydb", "60db"):
+    from .sixtydb_tts import TTS
+else:
+    from .text_to_speech import TTS
 
 
 class ConversationManager:
